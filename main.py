@@ -14,6 +14,7 @@ class Board(object):
 
     def make_board(self):
         # make board size of width & height
+        self.clear_board()
         mine_frame = ctk.CTkFrame(tabview.tab("Main"))
         for x in range(0, self.width):
             for y in range(0, self.height):
@@ -26,6 +27,10 @@ class Board(object):
         self.selectable_spaces = len(self.selectable_list)
         mine_frame.pack()
         self.mine_GUI = mine_frame
+
+    def clear_board(self):
+        for widget in tabview.tab("Main").winfo_children():
+            widget.destroy()
 
     def cell_clicked(self, x, y):
         cell = self.cell_dict[f"{x},{y}"]
@@ -64,7 +69,12 @@ class Board(object):
 
     def place_flag(self, event, x, y):
         square_button = get_widget_at_location_grid(self.mine_GUI, x, y)
-        square_button.configure(image=square_flag)
+        curr_image = square_button.cget("image")
+        if square_button.cget("state") != "disabled":
+            if curr_image == square_flag:
+                square_button.configure(image=square_base)
+            else:
+                square_button.configure(image=square_flag)
 
 w = ctk.CTk()
 
