@@ -1,6 +1,29 @@
+import time
+import random
+
 from PIL import Image
 import customtkinter as ctk
+
+import EasyAI
+import AIPickLocations
+import MediumAI
+
 ctk.set_appearance_mode("dark")
+
+
+def play():
+
+    #loop
+        #player turn
+        #check player lost
+        #ai turn
+
+    for i in range(0, len(game_board.selectable_list)):
+        x, y = MediumAI.AI_chooses_0s_but_not_100s(game_board)     #EasyAI.AI_move_randomly(game_board)
+        result = game_board.cell_clicked(x, y)
+        if result:
+            break
+        time.sleep(2)
 
 
 class Board(object):
@@ -11,10 +34,11 @@ class Board(object):
         self.selectable_list = []
         self.cell_dict = {}
         self.mine_GUI = ""
+        self.AIplaced = []
+
 
     def make_board(self):
         # make board size of width & height
-        self.clear_board()
         mine_frame = ctk.CTkFrame(tabview.tab("Main"))
         for x in range(0, self.width):
             for y in range(0, self.height):
@@ -32,15 +56,19 @@ class Board(object):
         for widget in tabview.tab("Main").winfo_children():
             widget.destroy()
 
+
     def cell_clicked(self, x, y):
+        game_over = False
         cell = self.cell_dict[f"{x},{y}"]
         square_button = get_widget_at_location_grid(self.mine_GUI, x, y)
         if cell["mine"] > 0:
             square_button.configure(image=square_bomb, state="disabled")
+            game_over = True
             print("Game Over")
         else:
             square_button.configure(image=image_map[str(cell["value"])], state="disabled")
         cell["selected"] = True
+        return game_over
 
 
     def set_cell_values(self):
@@ -78,16 +106,36 @@ class Board(object):
 
 w = ctk.CTk()
 
-
+game_board = Board()
 def start_generating():
     width_widget = setup_frame.winfo_children()[0]
     height_widget = setup_frame.winfo_children()[1]
-    game_board = Board()
+    bomb_widget = setup_frame.winfo_children()[2]
     game_board.width = int(width_widget.get())
     game_board.height = int(height_widget.get())
     #set height and width
     game_board.make_board()
-    game_board.place_mine(0,0)
+    tabview.set("Main")
+    time.sleep(3)
+    AI_mines = AIPickLocations.AI_pick_mines(game_board, int(bomb_widget.get()))
+    #place AI mines for it
+    for pos in AI_mines:
+        game_board.place_mine(pos[0], pos[1])
+    for i in range(int(bomb_widget.get())):
+        randomCellx = random.randint(0, game_board.width - 1)
+        randomCelly = random.randint(0, game_board.height - 1)
+        game_board.place_mine(randomCellx, randomCelly)
+    play()
+
+
+def start_generating_temp(width, height):
+    game_board.width = width
+    game_board.height = height
+    #set height and width
+    game_board.make_board()
+    #game_board.place_mine(0,0)
+
+
 
 def get_widget_at_location_grid(parent, x, y):
     for child in parent.winfo_children():
@@ -154,4 +202,6 @@ for x in range(0, grid_x):
 
 mine_frame.pack()
 '''
+
 w.mainloop()
+
