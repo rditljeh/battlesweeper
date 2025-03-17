@@ -10,21 +10,21 @@ import MediumAI
 
 ctk.set_appearance_mode("dark")
 
-
+"""
 def play():
 
     #loop
         #player turn
         #check player lost
         #ai turn
-
-    for i in range(0, len(game_board.selectable_list)):
-        x, y = MediumAI.AI_chooses_0s_but_not_100s(game_board)     #EasyAI.AI_move_randomly(game_board)
-        result = game_board.cell_clicked(x, y)
-        if result:
-            break
-        time.sleep(2)
-
+    if game_board.player_to_place <= 0:
+        for i in range(0, len(game_board.selectable_list)):
+            x, y = MediumAI.AI_chooses_0s_but_not_100s(game_board)     #EasyAI.AI_move_randomly(game_board)
+            result = game_board.cell_clicked(x, y)
+            if result:
+                break
+            time.sleep(2)
+"""
 
 class Board(object):
     def __init__(self):
@@ -35,6 +35,8 @@ class Board(object):
         self.cell_dict = {}
         self.mine_GUI = ""
         self.AIplaced = []
+        self.player_to_place = 0
+        self.difficulty = "easy"
 
 
     def make_board(self):
@@ -58,17 +60,51 @@ class Board(object):
 
 
     def cell_clicked(self, x, y):
-        game_over = False
+        cell = self.cell_dict[f"{x},{y}"]
+        square_button = get_widget_at_location_grid(self.mine_GUI, x, y)
+        if self.player_to_place > 0:
+            self.place_mine(x, y)
+            self.player_to_place -= 1
+            square_button.configure(image=square_flag_blue)
+            return
+        if cell["mine"] > 0:
+            square_button.configure(image=square_bomb, state="disabled")
+            popup = ctk.CTkToplevel(w)
+            time.sleep(2)
+            popup.title("Game Over")
+            label = ctk.CTkLabel(popup, text="Player Lost")
+            label.pack(padx=20, pady=20)
+            return
+        else:
+            square_button.configure(image=image_map[str(cell["value"])], state="disabled")
+        cell["selected"] = True
+        w.update_idletasks()
+        time.sleep(1)
+        self.AI_moves()
+
+    def AI_moves(self):
+        if self.difficulty == "easy":
+            x, y = EasyAI.AI_move_randomly(game_board)
+            game_board.AI_cell_clicked(x, y)
+        elif self.difficulty == "medium":
+            x, y = MediumAI.AI_chooses_0s_but_not_100s(game_board)     #EasyAI.AI_move_randomly(game_board)
+            game_board.AI_cell_clicked(x, y)
+
+
+    def AI_cell_clicked(self, x, y):
         cell = self.cell_dict[f"{x},{y}"]
         square_button = get_widget_at_location_grid(self.mine_GUI, x, y)
         if cell["mine"] > 0:
             square_button.configure(image=square_bomb, state="disabled")
-            game_over = True
-            print("Game Over")
+            popup = ctk.CTkToplevel(w)
+            popup.title("Game Over")
+            label = ctk.CTkLabel(popup, text="AI Lost")
+            label.pack(padx=20, pady=20)
         else:
             square_button.configure(image=image_map[str(cell["value"])], state="disabled")
         cell["selected"] = True
-        return game_over
+        w.update_idletasks()
+
 
 
     def set_cell_values(self):
@@ -113,6 +149,8 @@ def start_generating():
     bomb_widget = setup_frame.winfo_children()[2]
     game_board.width = int(width_widget.get())
     game_board.height = int(height_widget.get())
+    game_board.player_to_place = int(bomb_widget.get())
+    game_board.difficulty = "medium"
     #set height and width
     game_board.make_board()
     tabview.set("Main")
@@ -150,6 +188,7 @@ def get_widget_at_location_grid(parent, x, y):
 square_base = ctk.CTkImage(light_image=Image.open("images/Minesweeper_unopened_square.png"), size=(128, 128))
 square_bomb = ctk.CTkImage(light_image=Image.open("images/bomb.png"), size=(128, 128))
 square_flag = ctk.CTkImage(light_image=Image.open("images/flag.png"), size=(128, 128))
+square_flag_blue = ctk.CTkImage(light_image=Image.open("images/flag_blue.png"), size=(128, 128))
 square_0 = ctk.CTkImage(light_image=Image.open("images/0.png"), size=(128, 128))
 square_1 = ctk.CTkImage(light_image=Image.open("images/1.png"), size=(128, 128))
 square_2 = ctk.CTkImage(light_image=Image.open("images/2.png"), size=(128, 128))
