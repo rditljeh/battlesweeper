@@ -1,3 +1,5 @@
+import math
+
 from EasyAI import *
 
 
@@ -167,9 +169,11 @@ def AI_chooses_0s_but_not_100s(Board):
     AI_checks_100s(Board)
     AI_checks_0s(Board)
     print("before check")
-    check_rest_probabilities(Board)
+
     print("after check")
     zeroChance, definiteChance = checkProbabilities(Board)
+    if not zeroChance:
+        check_rest_probabilities(Board)
     selections = checks_all_possible_selections(Board)
 
     AIPlacedBombs = Board.AIplaced  # checkKnown(Board)
@@ -286,7 +290,7 @@ def mark_all_adjacent_unselected(Board, x, y):
 
 
 def check_rest_probabilities(Board):
-
+    nonadjacents = []
     for x in range(0, Board.width):
         for y in range(0, Board.height):
             if Board.cell_dict[f"{x},{y}"]["selected"]:
@@ -317,6 +321,28 @@ def check_rest_probabilities(Board):
                         if not Board.cell_dict[neighbor]["selected"] and not Board.cell_dict[neighbor]["probability"] == 1 and not Board.cell_dict[neighbor]["probability"] == 0:
                             if probability_of_rest_adjacents > Board.cell_dict[neighbor]["probability"]:
                                 Board.cell_dict[neighbor]["probability"] = probability_of_rest_adjacents
+
+    nonadjacent = 0
+    knownMines = 0         # make all nonadjacent probabilities = nonadjacent cells / nonadjacent mines
+    for x in range(0, Board.width):
+        for y in range(0, Board.height):
+            if not Board.cell_dict[f"{x},{y}"]["selected"] and Board.cell_dict[f"{x},{y}"]["probability"] == 0.01:
+                nonadjacent += 1
+                #TODO: make sure nonadjacemt cant be 0
+
+                # if probability not updated since this turn
+                # if not selected and has no selected adjacents
+                nonadjacents.append([x, y])
+            elif not Board.cell_dict[f"{x},{y}"]["selected"] and Board.cell_dict[f"{x},{y}"]["probability"] == 1:
+                knownMines += 1
+    for cell in nonadjacents:
+        print("ceLL: ", cell)
+        print(nonadjacent - 1)
+        print((((2*len(Board.AIplaced)) - knownMines)-1))
+        print((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))))
+        print(":")
+        print(math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines)))
+        Board.cell_dict[f"{cell[0]},{cell[1]}"]["probability"] = ((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))) / math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines))) #nonadjacent / (len(Board.AIplaced) - knownMines)
 
 
 def reset_probabilities(Board):
