@@ -166,6 +166,9 @@ def AI_checks_100s(board):
 
 def AI_chooses_0s_but_not_100s(Board):
     reset_probabilities(Board)
+    AIPlacedBombs = Board.AIplaced  # checkKnown(Board)
+    for i in AIPlacedBombs:
+        Board.cell_dict[f"{i[0]},{i[1]}"]["probability"] = 1
     AI_checks_100s(Board)
     AI_checks_0s(Board)
     print("before check")
@@ -177,10 +180,8 @@ def AI_chooses_0s_but_not_100s(Board):
     selections = checks_all_possible_selections(Board)
 
     AIPlacedBombs = Board.AIplaced  # checkKnown(Board)
+    print(AIPlacedBombs)
     for i in AIPlacedBombs:
-        print("probability:", Board.cell_dict[f"{i[0]},{i[1]}"]["probability"])
-        Board.cell_dict[f"{i[0]},{i[1]}"]["probability"] = 1
-        print("probability:", Board.cell_dict[f"{i[0]},{i[1]}"]["probability"])
         if i in selections:
             selections.remove(i)
 
@@ -199,10 +200,10 @@ def AI_chooses_0s_but_not_100s(Board):
     #if no such cell exists above, chooses a random cell until it finds one that is unselected without 100% chance
     else:
 
-        for i in definiteChance:
-            if i in selections:
-                selections.remove(i)
-        lowest_possibility = .99
+        #for i in definiteChance:
+            #if i in selections:
+                #selections.remove(i)
+        lowest_possibility = 1
         lowest_possibility_array = []
         for i in selections:
             print("no zero chance yet, i[0], i[1]:", i[0], i[1])
@@ -219,7 +220,7 @@ def AI_chooses_0s_but_not_100s(Board):
         x, y = lowest_possibility_array[randomCell]
         print("got here with:", x, y)
 
-    Board.cell_dict[f"{x},{y}"]["probability"] = 0
+    #Board.cell_dict[f"{x},{y}"]["probability"] = 0
     return x, y
 
 
@@ -337,11 +338,16 @@ def check_rest_probabilities(Board):
                 knownMines += 1
     for cell in nonadjacents:
         print("ceLL: ", cell)
+        print(len(Board.AIplaced))
+        print(knownMines)
         print(nonadjacent - 1)
         print((((2*len(Board.AIplaced)) - knownMines)-1))
         print((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))))
         print(":")
         print(math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines)))
+        if knownMines > nonadjacent:
+            #attempting to stop possible division by 0 error caused by mine stacking
+            knownMines = nonadjacent
         Board.cell_dict[f"{cell[0]},{cell[1]}"]["probability"] = ((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))) / math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines))) #nonadjacent / (len(Board.AIplaced) - knownMines)
 
 
@@ -350,6 +356,9 @@ def reset_probabilities(Board):
         for y in range(0, Board.height):
             if not Board.cell_dict[f"{x},{y}"]["selected"]:
                 Board.cell_dict[f"{x},{y}"]["probability"] = 0.01
+            else:
+                Board.cell_dict[f"{x},{y}"]["probability"] = -1
+
 
 def checks_all_possible_selections(Board):
     canBeSelected = []

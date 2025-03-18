@@ -41,6 +41,7 @@ class Board(object):
 
     def make_board(self):
         # make board size of width & height
+        self.clear_board()
         mine_frame = ctk.CTkFrame(tabview.tab("Main"))
         for x in range(0, self.width):
             for y in range(0, self.height):
@@ -54,6 +55,32 @@ class Board(object):
         mine_frame.pack()
         self.mine_GUI = mine_frame
 
+    def make_master_view(self):
+        master_frame = ctk.CTkFrame(tabview.tab("Master-view"))
+        for x in range(0, self.width):
+            for y in range(0, self.height):
+                cell = self.cell_dict[f"{x},{y}"] #{"mine":0, "selected":False, "value":0, "probability":0.01}
+                if cell["mine"] > 0:
+                    button = ctk.CTkButton(master=master_frame, image=square_bomb, state="disabled",
+                                           text="", width=64, height=64)
+                else:
+                    button = ctk.CTkButton(master=master_frame, image=image_map[str(cell["value"])], state="disabled",
+                                           text="test", width=64, height=64)
+                button.grid(row=y, column=x, sticky="nsew")
+
+
+    def make_bot_view(self):
+        # make board size of width & height
+        for widget in tabview.tab("Bot-View").winfo_children():
+            widget.destroy()
+        bot_frame = ctk.CTkFrame(tabview.tab("Bot-View"))
+        for x in range(0, self.width):
+            for y in range(0, self.height):
+                cell = self.cell_dict[f"{x},{y}"]
+                label = ctk.CTkLabel(master=bot_frame, text=cell["probability"])
+                label.grid(row=y, column=x, sticky="nsew", padx=5, pady=5)
+        bot_frame.pack()
+
     def clear_board(self):
         for widget in tabview.tab("Main").winfo_children():
             widget.destroy()
@@ -66,6 +93,8 @@ class Board(object):
             self.place_mine(x, y)
             self.player_to_place -= 1
             square_button.configure(image=square_flag_blue)
+            if self.player_to_place == 1:
+                self.make_master_view()
             return
         if cell["mine"] > 0:
             square_button.configure(image=square_bomb, state="disabled")
@@ -85,10 +114,10 @@ class Board(object):
     def AI_moves(self):
         if self.difficulty == "easy":
             x, y = EasyAI.AI_move_randomly(game_board)
-            game_board.AI_cell_clicked(x, y)
         elif self.difficulty == "medium":
             x, y = MediumAI.AI_chooses_0s_but_not_100s(game_board)     #EasyAI.AI_move_randomly(game_board)
-            game_board.AI_cell_clicked(x, y)
+        self.make_bot_view()
+        game_board.AI_cell_clicked(x, y)
 
 
     def AI_cell_clicked(self, x, y):
@@ -159,11 +188,6 @@ def start_generating():
     #place AI mines for it
     for pos in AI_mines:
         game_board.place_mine(pos[0], pos[1])
-    for i in range(int(bomb_widget.get())):
-        randomCellx = random.randint(0, game_board.width - 1)
-        randomCelly = random.randint(0, game_board.height - 1)
-        game_board.place_mine(randomCellx, randomCelly)
-    play()
 
 
 def start_generating_temp(width, height):
