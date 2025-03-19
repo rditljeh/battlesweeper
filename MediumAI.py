@@ -351,6 +351,18 @@ def check_rest_probabilities(Board):
         Board.cell_dict[f"{cell[0]},{cell[1]}"]["probability"] = ((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))) / math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines))) #nonadjacent / (len(Board.AIplaced) - knownMines)
 
 
+        ##last check to set any zeros to zero
+        for x in range(0, Board.width):
+            for y in range(0, Board.height):
+                if Board.cell_dict[f"{x},{y}"]["selected"] and Board.cell_dict[f"{x},{y}"]["value"] == 0:
+
+                    cell_neighbors = [f"{x + 1},{y}", f"{x + 1},{y + 1}", f"{x + 1},{y - 1}", f"{x - 1},{y}",
+                                      f"{x - 1},{y + 1}", f"{x - 1},{y - 1}", f"{x},{y + 1}", f"{x},{y - 1}"]
+
+                    for neighbor in cell_neighbors:
+                        if neighbor in Board.cell_dict.keys():
+                            Board.cell_dict[neighbor]["probability"] = 0
+
 def reset_probabilities(Board):
     for x in range(0, Board.width):
         for y in range(0, Board.height):
