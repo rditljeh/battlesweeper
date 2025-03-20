@@ -60,7 +60,18 @@ def AI_checks_0s(board):
                 if count_certain_bomb == board.cell_dict[f"{x},{y}"]["value"]:
                     set_all_certain_safe(board, x, y)
             elif board.cell_dict[f"{x},{y}"]["selected"] and board.cell_dict[f"{x},{y}"]["value"] == 0:
-                set_all_certain_safe(board, x, y)
+                set_every_cell_safe(board, x, y)
+
+
+def set_every_cell_safe(Board, x, y):
+    cell_neighbors = [f"{x + 1},{y}", f"{x + 1},{y + 1}", f"{x + 1},{y - 1}", f"{x - 1},{y}",
+                      f"{x - 1},{y + 1}", f"{x - 1},{y - 1}", f"{x},{y + 1}", f"{x},{y - 1}"]
+
+    for neighbor in cell_neighbors:
+        if neighbor in Board.cell_dict.keys():
+            if not Board.cell_dict[neighbor]["selected"]:
+                Board.cell_dict[neighbor]["probability"] = 0
+
 
 #sets any adjacent cells that are not 100% chance to 0% chance
 def set_all_certain_safe(Board, x, y):
@@ -350,8 +361,9 @@ def check_rest_probabilities(Board):
             knownMines = nonadjacent
         Board.cell_dict[f"{cell[0]},{cell[1]}"]["probability"] = ((math.comb((nonadjacent - 1), (((2*len(Board.AIplaced)) - knownMines)-1))) / math.comb(nonadjacent, ((2*len(Board.AIplaced)) - knownMines))) #nonadjacent / (len(Board.AIplaced) - knownMines)
 
-
+        #####
         ##last check to set any zeros to zero
+        '''
         for x in range(0, Board.width):
             for y in range(0, Board.height):
                 if Board.cell_dict[f"{x},{y}"]["selected"] and Board.cell_dict[f"{x},{y}"]["value"] == 0:
@@ -362,6 +374,7 @@ def check_rest_probabilities(Board):
                     for neighbor in cell_neighbors:
                         if neighbor in Board.cell_dict.keys():
                             Board.cell_dict[neighbor]["probability"] = 0
+                            '''
 
 def reset_probabilities(Board):
     for x in range(0, Board.width):
