@@ -20,7 +20,6 @@ def set_constraints(board):
                 options = []
 
                 for neighbor in cell_neighbors:
-                    print(neighbor)
                     if neighbor in board.cell_dict.keys() and board.cell_dict[neighbor]["selected"] == False:
                         options.append(neighbor)
                         #options.append(neighbor)
@@ -32,7 +31,7 @@ def set_constraints(board):
 
     # keeps only unique cells
     board.cells_of_interest = list(set(cells_of_interest))
-    #constraint_list.sort(key=lambda x: x[2])
+    constraint_list.sort(key=lambda x: x[2])
     board.constraints = constraint_list
     print("CONSTRAINT:", constraint_list)
     #print(constraint_list)
@@ -48,8 +47,9 @@ def legal_check(board, depth, lethal_cells):
             if cell in lethal_cells:
                 num_matches += lethal_cells.count(cell)
         if num_matches != constraint[0]:
+            print("FAIL", num_matches, constraint, lethal_cells)
             return False
-
+    print("SUCCEED", num_matches, constraint, lethal_cells)
     return True
 
 def recursive_check(board, depth, lethal_cells):
@@ -58,12 +58,17 @@ def recursive_check(board, depth, lethal_cells):
     if legal_check(board, depth, lethal_cells):
         if depth+1 >= len(board.constraints):
             # sometimes duplicates are chosen
+            print("LEGAL STATE ADDED", lethal_cells)
             board.legal_states.append(lethal_cells)
         else:
             recursive_check(board, depth + 1, lethal_cells)
+
     new_possibilities = list(itertools.combinations(board.constraints[depth][1], board.constraints[depth][0]))
     for cell in board.constraints[depth][1]:
-        new_possibilities.append([cell,cell])
+        #new_possibilities.append([cell, cell])
+        new_possibilities.append([cell])
+    if board.constraints[depth][0] == 0:
+        print("hello?", new_possibilities)
     for p in new_possibilities:
         # store choices in temp to compare against constraints
         temp = lethal_cells + list(p)
@@ -81,11 +86,15 @@ def generate_possible_boards(board):
     set_constraints(board)
     depth = 0
     num_mines = board.constraints[depth][0]
-    initial_possibilites = list(itertools.combinations(board.constraints[depth][1], num_mines))
-    for cell in board.constraints[depth][1]:
-        initial_possibilites.append([cell,cell])
+    initial_possibilities = [[]]
+    for m_num in range(0, board.constraints[depth][0]):
+        initial_possibilities += list(itertools.combinations(board.constraints[depth][1], num_mines))
+        print("initial:", initial_possibilities)
+        for cell in board.constraints[depth][1]:
+            #initial_possibilities.append([cell,cell])
+            initial_possibilities.append([cell])
     print("starting checks")
-    for p in initial_possibilites:
+    for p in initial_possibilities:
         recursive_check(board, depth, list(p))
     print("finished checks")
     print(board.legal_states)
@@ -99,6 +108,7 @@ def final_unknown_prob(board, legal_states):
         length_total += len(state)
     avg_found_mines = length_total/len(legal_states)
     total_mines = len(board.AIplaced) * 2
+    print("TOTAL MINES", total_mines, "LENGTH OF AI PLACED", len(board.AIplaced))
     unknown_mines = total_mines-avg_found_mines
     if unknown_mines <= 0:
         # checking if all cells have known neighbors
@@ -123,11 +133,17 @@ def count_occurences(board, lists):
     for mine in board.AIplaced:
         print(f"{mine[0]},{mine[1]}")
         counts[f"{mine[0]},{mine[1]}"] = 999999
+    best_x = -1
+    best_y = -1
     for cell in board.cells_of_interest:
         if cell not in counts.keys() and cell not in board.AIplaced:
             coords = cell.split(",")
             print(f"GUARANTEED SAFE:{coords}")
-            return coords[0], coords[1]
+            best_x = coords[0]
+            best_y = coords[1]
+            print(board.cell_dict[f"{best_x},{best_y}"])
+    if int(best_x) > -1:
+        return best_x, best_y
     min_key, min_count = min(counts.items(), key=itemgetter(1))
     #print(f"Lowest probability is {min_key} with {min_count}/{len(lists)} ({(min_count/len(lists))*100}%)")
     print(counts)
@@ -145,6 +161,3 @@ def count_occurences(board, lists):
         print(f"UNKNOWN CELL:{coords}")
         return coords[0], coords[1]
 
-
-
-#print(get_constraints(game_board))
